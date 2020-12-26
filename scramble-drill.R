@@ -149,17 +149,17 @@ scramble_drill %>%
        y = "EPA") +
   coord_flip()
 
-scramble_stats <- scramble_drill %>%
-  select(playId, defensiveTeam, epa) %>%
+team_scramble_stats <- scramble_drill %>%
+  select(playId, defensiveTeam, displayName, epa) %>%
   group_by(defensiveTeam) %>%
-  dplyr::summarize(Mean = mean(epa, na.rm=TRUE)) %>%
+  summarize(Mean = mean(epa, na.rm=TRUE)) %>%
   mutate(EPA = round(Mean, digits = 2))
   
-scramble_stats %>% 
+team_scramble_stats %>% 
   ggplot(aes(x = reorder(defensiveTeam, -Mean),
              y = Mean)) + 
   geom_bar(stat = 'identity', 
-           fill = ifelse(scramble_stats$Mean < 0, "lightgreen", "firebrick")) +
+           fill = ifelse(team_scramble_stats$Mean < 0, "lightgreen", "firebrick")) +
   coord_flip() +
   ggtitle("Average EPA on Scramble Drills by Team") +
   geom_text(aes(label = EPA),
@@ -168,6 +168,51 @@ scramble_stats %>%
   theme(text = element_text(size=16)) +
   xlab('Team') +
   ylab("Average EPA")
-  
 
 
+player_scramble_stats <- scramble_drill %>%
+  select(playId, defensiveTeam, displayName, epa) %>%
+  group_by(displayName) %>%
+  filter(n() >= 3) %>% 
+  summarize(Mean = mean(epa, na.rm = TRUE)) %>%
+  mutate(EPA = round(Mean, digits = 2))  
+
+bad_scramble_stats <- player_scramble_stats %>%
+  arrange(desc(Mean)) %>% 
+  head(n = 20)
+
+bad_scramble_stats %>%
+  ggplot(aes(x = reorder(displayName, Mean),
+             y = Mean)) +
+  geom_bar(stat = 'identity',
+           color = "blue",
+           fill = "lightblue") +
+  geom_text(aes(label = EPA),
+            nudge_y = -0.035) + 
+  coord_flip() +
+  ggtitle("20 Worst Players in Scramble Drill") +
+  xlab("Player") +
+  ylab("EPA") +
+  theme_minimal() +
+  theme_bw()
+
+good_scramble_stats <- player_scramble_stats %>%
+  arrange(desc(-Mean)) %>% 
+  head(n = 20)
+
+good_scramble_stats %>%
+  ggplot(aes(x = reorder(displayName, -Mean),
+             y = abs(Mean))) +
+  geom_bar(stat = 'identity',
+           color = "blue",
+           fill = "lightblue") +
+  geom_text(aes(label = EPA),
+            nudge_y = -0.1) + 
+  coord_flip() +
+  ggtitle("20 Best Players in Scramble Drill") +
+  xlab("Player") +
+  ylab("EPA") +
+  theme_minimal() +
+  theme_bw()
+
+#save.image(file = "scramble_stats.Rda")
