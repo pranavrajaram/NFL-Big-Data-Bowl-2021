@@ -81,7 +81,7 @@ generate_play = function(game, play){
     geom_text(data= data.frame(x = numbers_x, y = numbers_bottom_y), aes(label = 50 - abs( 50 - (numbers_x-10) )), colour = 'white', size = 5) +
     geom_text(data= data.frame(x = numbers_x, y = numbers_top_y), aes(label = 50 - abs( 50 - (numbers_x-10) )), colour = 'white', size = 5) +
     geom_point(data = one_play_for_plot_home, aes(x=x,y=y), colour = 'red', size = 5) + 
-    geom_point(data = one_play_for_plot_away, aes(x=x,y=y), colour = 'black', size = 5) +
+    geom_point(data = one_play_for_plot_away, aes(x=x,y=y), colour = 'purple', size = 5) +
     geom_text(data = one_play_for_plot_home, aes(x = x, y = y, label = jerseyNumber), colour = 'white') +
     geom_text(data = one_play_for_plot_away, aes(x = x, y = y, label = jerseyNumber), colour = 'white') +
     geom_point(colour = 'white', size = 2)
@@ -91,8 +91,6 @@ generate_play = function(game, play){
   
   
   animate(anim, width = 800, height = 400, fps = 50, duration = 10)
-  
-  # can be much faster if gifski is installed (which is default for animate()):
   
 }
 
