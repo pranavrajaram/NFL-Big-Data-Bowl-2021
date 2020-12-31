@@ -2,6 +2,8 @@ library(tidyverse)
 library(gganimate)
 library(cowplot)
 library(repr)
+library(gt)
+library(fontawesome)
 
 options(repr.plot.width=15, repr.plot.height = 10)
 
@@ -101,13 +103,88 @@ scramble_drill <- nfl_dtf %>%
   select(playDescription,  epa, typeDropback, passResult, displayName, distToFootballAtBallArrival, defensiveTeam) %>%
   group_by(defensiveTeam)
 
+headshot_links <- c("https://a.espncdn.com/i/headshots/nfl/players/full/4038538.png",
+                    "https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/11366.png",
+                    "https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/2510863.png",
+                    "https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/17435.png",
+                    "https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/15612.png",
+                    "https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/12527.png",
+                    "https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/3061106.png",
+                    "https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/2982870.png",
+                    "https://a.espncdn.com/i/headshots/nfl/players/full/3925358.png",
+                    "https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/3051388.png",
+                    "https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/15806.png",
+                    "https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/14297.png",
+                    "https://a.espncdn.com/i/headshots/nfl/players/full/13975.png",
+                    "https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/15812.png",
+                    "https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/3052101.png",
+                    "https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/3895429.png",
+                    "https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/12691.png",
+                    "https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/2578378.png",
+                    "https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/3054847.png",
+                    "https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/2970694.png")
+
 #find closest defenders on scramble drills
 closest_defenders <- scramble_drill %>%
   select(playId, defensiveTeam, displayName, distToFootballAtBallArrival) %>%
   group_by(displayName) %>%
   filter(n() >= 3) %>% 
   summarize(MeanDist = mean(distToFootballAtBallArrival, na.rm = TRUE)) %>%
-  mutate(AvgDist = round(MeanDist, digits = 2))  
+  mutate(AvgDist = round(MeanDist, digits = 2)) %>%
+  arrange(AvgDist) %>%
+  mutate(rank = dense_rank(AvgDist)) %>%
+  head(n = 20) %>%
+  mutate(head = headshot_links) %>%
+  select(rank, displayName, head, AvgDist)
+
+# Table for Closest Defenders
+closest_defenders %>%
+  gt() %>%
+  cols_align(align = "center",
+             columns = vars(AvgDist)) %>%
+  tab_options(
+    data_row.padding = px(2)
+  ) %>%
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_column_labels(TRUE)
+  ) %>%
+  tab_header(
+    title = md("Closest Defenders on Average"),
+    subtitle = "On scramble plays"
+  ) %>%
+  cols_label(
+    rank = "RK",
+    displayName = "Name",
+    head = "",
+    AvgDist = "Distance"
+  ) %>%
+  opt_all_caps() %>%
+  tab_options(
+    table.background.color = "white",
+    column_labels.background.color = "purple",
+    #row.striping.background_color = "#e0e0e0"
+  ) %>%
+  opt_row_striping() %>%
+  opt_table_font(
+    font = list(
+      google_font("Lato"),
+      default_fonts()
+    )
+  ) %>%
+  text_transform(
+    locations = cells_body(columns = vars(head)),
+    fn = function(x){
+      gt::web_image(x)
+    }
+  ) %>%
+  data_color(
+    columns = vars(AvgDist),
+    colors = scales::col_numeric(
+      palette = c("#3fc1c9", "white"),
+      domain = NULL
+    )
+  )
 
 # filter Scramble plays by team
 team_scramble_stats <- scramble_drill %>%
@@ -178,3 +255,5 @@ good_scramble_stats %>%
   theme(axis.title = element_text()) + 
   ylab('EPA') +
   xlab('Player')
+
+save.image("scramble_data.RData")
