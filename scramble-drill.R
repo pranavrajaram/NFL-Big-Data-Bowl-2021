@@ -4,6 +4,8 @@ library(cowplot)
 library(repr)
 library(gt)
 library(fontawesome)
+library(ggimage)
+
 
 options(repr.plot.width=15, repr.plot.height = 10)
 
@@ -186,27 +188,70 @@ closest_defenders %>%
     )
   )
 
-# filter Scramble plays by team
+# filter Scramble plays by team + add logos
 team_scramble_stats <- scramble_drill %>%
   select(playId, defensiveTeam, displayName, epa) %>%
   group_by(defensiveTeam) %>%
   summarize(Mean = mean(epa, na.rm=TRUE)) %>%
-  mutate(EPA = round(Mean, digits = 2))
+  mutate(EPA = round(Mean, digits = 2)) %>%
+  arrange(Mean) %>%
+  mutate(logo = c("https://a.espncdn.com/i/teamlogos/nfl/500/lac.png",
+                  "https://a.espncdn.com/i/teamlogos/nfl/500/atl.png",
+                  "https://a.espncdn.com/i/teamlogos/nfl/500/det.png",
+                  "https://a.espncdn.com/i/teamlogos/nfl/500/mia.png",
+                  "https://a.espncdn.com/i/teamlogos/nfl/500/phi.png",
+                  "https://a.espncdn.com/i/teamlogos/nfl/500/hou.png",
+                  "https://a.espncdn.com/i/teamlogos/nfl/500/ten.png",
+                  "https://a.espncdn.com/i/teamlogos/nfl/500/sea.png",
+                  "https://a.espncdn.com/i/teamlogos/nfl/500/chi.png",
+                  "https://a.espncdn.com/i/teamlogos/nfl/500/cle.png",
+                  "https://a.espncdn.com/i/teamlogos/nfl/500/tb.png",
+                  "https://a.espncdn.com/i/teamlogos/nfl/500/no.png",
+                  "https://a.espncdn.com/i/teamlogos/nfl/500/min.png",
+                  "https://a.espncdn.com/i/teamlogos/nfl/500/gb.png",
+                  "https://a.espncdn.com/i/teamlogos/nfl/500/den.png",
+                  "https://a.espncdn.com/i/teamlogos/nfl/500/ari.png",
+                  "https://a.espncdn.com/i/teamlogos/nfl/500/nyj.png",
+                  "https://a.espncdn.com/i/teamlogos/nfl/500/ne.png",
+                  "https://a.espncdn.com/i/teamlogos/nfl/500/buf.png",
+                  "https://a.espncdn.com/i/teamlogos/nfl/500/jax.png",
+                  "https://a.espncdn.com/i/teamlogos/nfl/500/cin.png",
+                  "https://a.espncdn.com/i/teamlogos/nfl/500/was.png",
+                  "https://a.espncdn.com/i/teamlogos/nfl/500/dal.png",
+                  "https://a.espncdn.com/i/teamlogos/nfl/500/ind.png",
+                  "https://a.espncdn.com/i/teamlogos/nfl/500/oak.png",
+                  "https://a.espncdn.com/i/teamlogos/nfl/500/kc.png",
+                  "https://a.espncdn.com/i/teamlogos/nfl/500/pit.png",
+                  "https://a.espncdn.com/i/teamlogos/nfl/500/la.png",
+                  "https://a.espncdn.com/i/teamlogos/nfl/500/sf.png",
+                  "https://a.espncdn.com/i/teamlogos/nfl/500/bal.png",
+                  "https://a.espncdn.com/i/teamlogos/nfl/500/car.png",
+                  "https://a.espncdn.com/i/teamlogos/nfl/500/nyg.png"))
+
+
+asp_ratio <- 1.12
 
 # Plot team stats
 team_scramble_stats %>% 
   ggplot(aes(x = reorder(defensiveTeam, -Mean),
              y = Mean)) + 
   geom_bar(stat = 'identity', 
-           fill = ifelse(team_scramble_stats$Mean < 0, "lightgreen", "firebrick")) +
+           fill = ifelse(team_scramble_stats$Mean < 0, "lightgreen", "firebrick2")) +
   coord_flip() +
   ggtitle("Average EPA on Scramble Drills by Team") +
-  geom_text(aes(label = EPA),
-            nudge_y = 0.05) + 
   theme_bw() +
   theme(text = element_text(size=16)) +
+  geom_text(aes(label = EPA),
+            nudge_y = ifelse(team_scramble_stats$Mean < 0, 0.13, -0.13)) + 
+  ggthemes::theme_fivethirtyeight() + 
+  theme(axis.title = element_text()) + 
   xlab('Team') +
-  ylab("Average EPA")
+  ylab("Average EPA") +
+  geom_image(aes(image = logo),
+             size = 0.04,
+             by = "width",
+             asp = asp_ratio) +
+  theme(aspect.ratio = 1/asp_ratio) 
 
 # filter by player
 player_scramble_stats <- scramble_drill %>%
